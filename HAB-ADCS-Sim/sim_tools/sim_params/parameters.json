@@ -1,0 +1,47 @@
+{
+    "simulation": {
+        "duration": 100.0,
+        "time_step": 0.1,
+        "initial_state": [0.0, 0.0, 0.0, 0.0, 0.0]
+    },
+    "Payload_params": {
+        "Ip": 195,
+        "Kp": 0.0,
+        "Cp": 0.1
+    },
+    "rw_motor": { 
+        "rotor_inertia": 0.0, 
+        "load_inertia": 0.942, 
+        "torque_constant": 0.57, 
+        "back_emf_constant": 0.57, 
+        "inductance": 1.0, 
+        "resistance": 5.7,
+        "max_current": 0.45,
+        "proportional_gain":1174,
+        "derivative_gain":894,
+        "integral_gain": 30,
+        "max_voltage": 6,
+        "viscous_friction_coeff": 0.01
+    },
+    "lt_motor": {
+        "rotor_inertia": 0.0,
+        "load_inertia": 195,
+        "torque_constant": 0.57,
+        "back_emf_constant": 0,
+        "inductance": 1.0,
+        "resistance": 5.7,
+        "max_current": 0.45,
+        "proportional_gain": 0,
+        "derivative_gain":1.179,
+        "integral_gain": 0,
+        "max_voltage": 6,
+        "viscous_friction_coeff": 0.01
+    },
+    "wind_params": {
+        "order": 2,
+        "ar_coeffs": [0.185, -0.84],
+        "sigma_noise": 1,
+        "turb_f_min": 0.01,
+        "cutoff_freq": 0.1
+    }
+}
