@@ -32,7 +32,7 @@
         "resistance": 5.7,
         "max_current": 0.45,
         "proportional_gain": 0,
-        "derivative_gain":1.179,
+        "derivative_gain":2.179,
         "integral_gain": 0,
         "max_voltage": 6,
         "viscous_friction_coeff": 0.01

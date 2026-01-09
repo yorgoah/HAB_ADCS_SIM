@@ -1,7 +1,0 @@
-{
-    "order": 2,
-    "ar_coeffs": [0.185, -0.84],
-    "sigma_noise": 1,
-    "turb_f_min": 0.01,
-    "cutoff_freq": 0.1
-}
