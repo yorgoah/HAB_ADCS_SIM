@@ -1,0 +1,1 @@
+Physics simulation of high altitude balloon payload's attitude dynamics. Simulated reaction wheel control and momentum dump with non-interfering low torque motor. Motor dynamics are also simulated and wind is generated stacking functions with different frequencies to model high altitude wind disturbances.

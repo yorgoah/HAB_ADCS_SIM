@@ -32,7 +32,7 @@ class ModelIntegrator:
         lt_i = state[3]
         rw_vel = state[4]
 
-        tau_d = self.disturbance.generate_wind_disturbance(t)
+        tau_d = self.disturbance.generate_torque_disturbance(t)
 
         error = yaw
 

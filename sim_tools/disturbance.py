@@ -12,7 +12,7 @@ class DisturbanceGenerator:
         self.f_min = params["wind_params"]["turb_f_min"]
         self.cutoff_freq = params["wind_params"]["cutoff_freq"]
     
-    def generate_wind_disturbance(self, t):
+    def _generate_wind_disturbance(self, t):
         N = int(self.duration / self.dt) 
         white_noise = np.random.normal(0, self.sigma_noise, N)
         ar_output = lfilter([1], np.concatenate(([1], -np.array(self.ar_coeffs))), white_noise)
@@ -37,3 +37,8 @@ class DisturbanceGenerator:
         time_index = int(t // self.dt) - 2
 
         return total_wind_speed[time_index]
+    
+    def generate_torque_disturbance(self, t):
+        wind_speed = self._generate_wind_disturbance(t)
+        torque_disturbance = 0.5*0.191*wind_speed*np.abs(wind_speed)*0.3
+        return torque_disturbance
