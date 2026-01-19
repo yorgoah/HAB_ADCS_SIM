@@ -11,9 +11,9 @@ class Controller:
         self.e_prev = 0.0
         self.e_int = 0.0
 
-    def output(self, error:float):
+    def output(self, error: float, error_derivative: float | None = None):
         P = self.Kp * error
-        D = self.Kd * (error - self.e_prev)/self.dt
+        D = self.Kd * (error - self.e_prev)/self.dt if error_derivative is None else self.Kd * error_derivative
 
         self.e_int += error * self.dt
         I = self.Ki * self.e_int

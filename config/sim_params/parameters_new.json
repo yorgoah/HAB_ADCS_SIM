@@ -1,0 +1,63 @@
+{
+    "simulation": {
+        "duration": 10.0,
+        "time_step": 0.001,
+        "initial_state": [0.0, 0.0, 0.0, 0.0, 0.0]
+    },
+    "Payload_params": {
+        "Ip": 0.005,
+        "Kp": 0.0,
+        "Cp": 0.0001
+    },
+    "rw_motor": { 
+        "rotor_inertia": 0.00000073, 
+        "load_inertia": 0.0001, 
+        "torque_constant": 0.0246, 
+        "back_emf_constant": 0.0246, 
+        "inductance": 0.00112, 
+        "resistance": 1.71,
+        "max_current": 1.49,
+        "proportional_gain":1.5,
+        "derivative_gain":0.9,
+        "integral_gain": 0,
+        "max_voltage": 6,
+        "viscous_friction_coeff": 0.0001,
+        "max_angular_velocity": 24366
+    },
+    "lt_motor": {
+        "rotor_inertia": 0.00000073, 
+        "load_inertia": 0.005, 
+        "torque_constant": 0.0246, 
+        "back_emf_constant": 0.0246, 
+        "inductance": 0.0012, 
+        "resistance": 1.71,
+        "max_current": 1.49,
+        "proportional_gain": 0,
+        "derivative_gain":0.0035,
+        "integral_gain": 0,
+        "max_voltage": 6,
+        "viscous_friction_coeff": 0.0001
+    },
+    "wind_params": {
+        "order": 2,
+        "ar_coeffs": [0.185, -0.84],
+        "sigma_noise": 1,
+        "turb_f_min": 0.01,
+        "cutoff_freq": 0.1
+    },
+    "inertial_measurement_unit": {
+        "sampling_rate": 20,
+        "noise_density": 0.0,
+        "random_walk": 0.0
+    },
+    "tachometer": {
+        "sampling_rate": 50,
+        "noise_density": 0.0,
+        "random_walk": 0.0
+    },
+    "gyroscope": {
+        "sampling_rate": 50,
+        "noise_density": 0.00005791678230180238,
+        "random_walk": 0.000003334252163195604
+    }
+}

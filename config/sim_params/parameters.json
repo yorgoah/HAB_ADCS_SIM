@@ -1,7 +1,7 @@
 {
     "simulation": {
         "duration": 100.0,
-        "time_step": 0.1,
+        "time_step": 0.01,
         "initial_state": [0.0, 0.0, 0.0, 0.0, 0.0]
     },
     "Payload_params": {
@@ -17,7 +17,7 @@
         "inductance": 1.0, 
         "resistance": 5.7,
         "max_current": 0.45,
-        "proportional_gain":1174,
+        "proportional_gain":1194,
         "derivative_gain":894,
         "integral_gain": 30,
         "max_voltage": 6,
@@ -32,7 +32,7 @@
         "resistance": 5.7,
         "max_current": 0.45,
         "proportional_gain": 0,
-        "derivative_gain":2.179,
+        "derivative_gain":1.5,
         "integral_gain": 0,
         "max_voltage": 6,
         "viscous_friction_coeff": 0.01
@@ -43,5 +43,20 @@
         "sigma_noise": 1,
         "turb_f_min": 0.01,
         "cutoff_freq": 0.1
+    },
+    "inertial_measurement_unit": {
+        "sampling_rate": 20,
+        "noise_density": 0.0,
+        "random_walk": 0.0
+    },
+    "tachometer": {
+        "sampling_rate": 50,
+        "noise_density": 0.0,
+        "random_walk": 0.0
+    },
+    "gyroscope": {
+        "sampling_rate": 50,
+        "noise_density": 0.00005791678230180238,
+        "random_walk": 0.000003334252163195604
     }
 }

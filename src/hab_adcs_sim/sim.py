@@ -1,14 +1,14 @@
 import numpy as np
 import plotly.graph_objects as go
 import click
-from integrator import ModelIntegrator
+from sim_tools.integrator import ModelIntegrator
 from pathlib import Path
 import json
 
 @click.command()
 @click.option(
     "--parameters",
-    default=Path(__file__).resolve().parent / "sim_params" / "parameters.json",
+    default=Path("config/sim_params/parameters_new.json"),
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     show_default=True,
 )
