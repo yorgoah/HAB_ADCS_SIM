@@ -11,6 +11,6 @@ class Motor:
 
     def torque(self, voltage: float, current: float, angular_velocity: float) -> float:
         di_dt = (voltage - self.R * current - self.Kb * angular_velocity) / self.L
-        torque = self.Kt * current - self.b * angular_velocity
-        rw_acc = torque/self.J
+        torque = self.Kt * current 
+        rw_acc = (torque - self.b * angular_velocity)/self.J
         return torque, di_dt, rw_acc
