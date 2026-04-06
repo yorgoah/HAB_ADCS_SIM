@@ -25,10 +25,12 @@ def simulate(parameters):
     yaw = []
     ang_vel = []
     rw_i = []
-    lt_i = []
+    lt_torque = []
     rw_vel = []
     x = []
     y = []
+    disturbance=[]
+    rw_torque = []
     error = []
 
     while t <= total_time:
@@ -36,10 +38,12 @@ def simulate(parameters):
         yaw.append(state[0])
         ang_vel.append(state[1])
         rw_i.append(state[2])
-        lt_i.append(state[3])
+        lt_torque.append(state[3])
         rw_vel.append(state[4])
         x.append(state[5])
         y.append(state[6])
+        disturbance.append(state[7])
+        rw_torque.append(state[8])
         error.append(state[0]-np.arctan2(state[6], state[5]))
         t+=dt
         state = model.rk4_step(state, t)
@@ -49,6 +53,10 @@ def simulate(parameters):
     fig.add_trace(go.Scatter(x=times, y=error, name="yaw_error"))
     fig.add_trace(go.Scatter(x=times, y=ang_vel, name="ang_vel"))
     fig.add_trace(go.Scatter(x=times, y=rw_vel, name="rw_vel"))
+    fig.add_trace(go.Scatter(x=times, y=rw_torque, name="rw_torque"))
+    fig.add_trace(go.Scatter(x=times, y=disturbance, name="disturbance"))
+    fig.add_trace(go.Scatter(x=times, y=rw_i, name="rw_current"))
+    fig.add_trace(go.Scatter(x=times, y=lt_torque, name="lt_current"))
     fig.update_layout(
         title="Simulation signals vs time",
         xaxis_title="Time [s]",
@@ -63,10 +71,12 @@ def simulate(parameters):
         "yaw": yaw,
         "ang_vel": ang_vel,
         "rw_i": rw_i,
-        "lt_i": lt_i,
+        "lt_torque": lt_torque,
         "rw_vel": rw_vel,
         "x": x,
         "y": y,
+        "disturbance": disturbance,
+        "rw_torque": rw_torque,
         "error": error
     }
     

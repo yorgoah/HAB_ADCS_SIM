@@ -54,12 +54,14 @@ class ModelIntegrator:
         rw_voltage = self.rw_controller.output(yaw_error, yaw_rate_measured)
         rw_torque, di_dt_rw, rw_acc = self.rw_motor.torque(rw_voltage, rw_i, rw_vel)
         
-        lt_voltage = self.lt_controller.output(rw_vel_measured)
-        lt_torque, di_dt_lt, _ = self.lt_motor.torque(lt_voltage, lt_i, ang_vel)
-        
-
-        ang_acc = (tau_d - rw_torque - lt_torque - self.Cp*ang_vel) / self.Ip
-        return np.array([ang_vel, ang_acc, di_dt_rw, di_dt_lt, rw_acc, x_dot, y_dot])
+        if self.momentum_management:
+            lt_i = self.lt_controller.output(rw_vel_measured)
+            lt_torque, _, _ = self.lt_motor.torque(current=lt_i)
+            ang_acc = (tau_d - rw_torque - lt_torque - self.Cp*ang_vel) / self.Ip
+            return np.array([ang_vel, ang_acc, di_dt_rw, lt_torque, rw_acc, x_dot, y_dot, tau_d, rw_torque])
+        else:
+            ang_acc = (tau_d - rw_torque - self.Cp*ang_vel) / self.Ip
+            return np.array([ang_vel, ang_acc, di_dt_rw, 0.0, rw_acc, x_dot, y_dot, tau_d, rw_torque])
     
     def rk4_step(self, state: np.ndarray, t: float):
         dt = self.dt
@@ -71,5 +73,4 @@ class ModelIntegrator:
         new_state = (h1 + 2*h2 + 2*h3 + h4)*dt + state
         new_state[2] = float(np.clip(new_state[2], -self.max_current, self.max_current))
         new_state[3] = float(np.clip(new_state[3], -self.max_current, self.max_current))
-        new_state[4] = float(np.clip(new_state[4], -self.constants['rw_motor']['max_angular_velocity'], self.constants['rw_motor']['max_angular_velocity']))
         return new_state

@@ -39,6 +39,11 @@ class DisturbanceGenerator:
         return total_wind_speed[time_index]
     
     def generate_torque_disturbance(self, t):
-        wind_speed = self._generate_wind_disturbance(t)
-        torque_disturbance = 0.05*0.191*wind_speed*np.abs(wind_speed)*0.8
-        return torque_disturbance
+        if self.simulated:
+            wind_speed = self._generate_wind_disturbance(t)
+            torque_disturbance = 0.05*0.191*wind_speed*np.abs(wind_speed)*0.8
+            return torque_disturbance
+        else:
+            time = np.argmin(self.time - self.start)
+            idx = time + int(t / 0.02)
+            return self.torque[idx]

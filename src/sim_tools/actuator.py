@@ -9,7 +9,7 @@ class Motor:
         self.L = params["inductance"]
         self.b = params["viscous_friction_coeff"]
 
-    def torque(self, voltage: float, current: float, angular_velocity: float) -> float:
+    def torque(self, voltage: float | None=0.0, current: float | None=0.0, angular_velocity: float | None=0.0) -> float:
         di_dt = (voltage - self.R * current - self.Kb * angular_velocity) / self.L
         torque = self.Kt * current 
         rw_acc = (torque - self.b * angular_velocity)/self.J

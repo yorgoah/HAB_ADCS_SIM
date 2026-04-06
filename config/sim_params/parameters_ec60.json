@@ -1,8 +1,8 @@
 {
     "simulation": {
-        "duration": 10.0,
+        "duration": 50.0,
         "time_step": 0.001,
-        "initial_state": [0.785, 0.0, 0.0, 0.0, 0.0, 200.0, 200.0],
+        "initial_state": [0.785, 0.0, 0.0, 0.0, 0.0, 200.0, 200.0, 0.0, 0.0],
         "ground_station": [0.0, 0.0]
     },
     "Payload_params": {
@@ -26,20 +26,24 @@
         "max_angular_velocity": 182.2
     },
     "lt_motor": {
-        "rotor_inertia": 0.00000073, 
-        "load_inertia": 0.005, 
-        "torque_constant": 0.0246, 
-        "back_emf_constant": 0.0246, 
-        "inductance": 0.0012, 
-        "resistance": 1.71,
-        "max_current": 1.49,
-        "proportional_gain": 0,
-        "derivative_gain":0.035,
+        "activate": true,
+        "rotor_inertia": 0.0, 
+        "load_inertia": 0.015, 
+        "torque_constant": 0.128, 
+        "back_emf_constant": 0.128, 
+        "inductance": 0.00107, 
+        "resistance": 0.86,
+        "max_current": 9.6,
+        "proportional_gain": 0.005,
+        "derivative_gain":0.02,
         "integral_gain": 0,
-        "max_voltage": 6,
+        "max_voltage": 12,
         "viscous_friction_coeff": 0.0001
     },
     "wind_params": {
+        "simulated": false,
+        "file": "flight_04-03",
+        "start": 3110,
         "order": 2,
         "ar_coeffs": [0.185, -0.84],
         "sigma_noise": 1,
