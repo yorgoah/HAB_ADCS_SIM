@@ -1,6 +1,6 @@
 {
     "simulation": {
-        "duration": 50.0,
+        "duration": 1000.0,
         "time_step": 0.001,
         "initial_state": [0.785, 0.0, 0.0, 0.0, 0.0, 200.0, 200.0, 0.0, 0.0],
         "ground_station": [0.0, 0.0]

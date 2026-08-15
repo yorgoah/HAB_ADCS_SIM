@@ -5,8 +5,9 @@ from sim_tools.disturbance import DisturbanceGenerator
 from sim_tools.sensor import Sensor
 
 class ModelIntegrator:
-    def __init__(self, init_state: numpy.ndarray = None, dt: float = 0.1, constants: dict = {}):
-        self.state = numpy.zeros(2) if init_state is None else init_state
+    def __init__(self, init_state: np.ndarray = None, dt: float = 0.1, constants: dict = None):
+        constants = {} if constants is None else constants
+        self.state = np.zeros(9) if init_state is None else init_state
         self.dt = dt
         self.constants = constants
         self.duration = constants['simulation']['duration']
@@ -21,6 +22,7 @@ class ModelIntegrator:
         )
         self.rw_motor = Motor(constants["rw_motor"])
         self.max_current = constants['rw_motor']['max_current']
+        self.momentum_management = constants['lt_motor']['activate']
         self.lt_controller = Controller(
             params=constants['lt_motor'],
             dt=dt
@@ -72,5 +74,7 @@ class ModelIntegrator:
 
         new_state = (h1 + 2*h2 + 2*h3 + h4)*dt / 6.0 + state
         new_state[2] = float(np.clip(new_state[2], -self.max_current, self.max_current))
-        new_state[3] = float(np.clip(new_state[3], -self.max_current, self.max_current))
+        new_state[3] = h4[3]
+        new_state[7] = h4[7]
+        new_state[8] = h4[8]
         return new_state

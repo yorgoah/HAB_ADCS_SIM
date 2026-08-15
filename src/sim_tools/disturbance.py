@@ -1,6 +1,7 @@
+import pandas as pd
 import numpy as np
 from scipy.signal import lfilter
-
+from pathlib import Path
 class DisturbanceGenerator:
     def __init__(self, params: dict):
         self.dt = params["simulation"]["time_step"]
@@ -11,13 +12,27 @@ class DisturbanceGenerator:
         self.sigma_noise = params["wind_params"]["sigma_noise"]
         self.f_min = params["wind_params"]["turb_f_min"]
         self.cutoff_freq = params["wind_params"]["cutoff_freq"]
+        self.simulated = params["wind_params"]["simulated"]
+        repo_root = Path(__file__).resolve().parents[2]
+        self.data_path = repo_root / "config" / "ressources" / "log100_vehicle_angular_velocity_0.csv"
+        self.start = params["wind_params"]["start"]
+        self.wind_torque = None
+
+        if self.simulated:
+            self.wind_torque = self._generate_wind_disturbance()
+        else:
+            df = pd.read_csv(self.data_path)
+            self.time = df["timestamp"].to_numpy() / 1e6
+            self.torque = params["Payload_params"]["Ip"] * df["xyz_derivative[2]"].to_numpy()
+            self.start_idx = int(np.argmin(np.abs(self.time - self.start)))
+
     
-    def _generate_wind_disturbance(self, t):
-        N = int(self.duration / self.dt) 
+    def _generate_wind_disturbance(self):
+        N = int(self.duration / self.dt) + 2
         white_noise = np.random.normal(0, self.sigma_noise, N)
         ar_output = lfilter([1], np.concatenate(([1], -np.array(self.ar_coeffs))), white_noise)
 
-        def _von_karman_spectrum(n, f_min, f_max, sampling_rate):
+        def _von_karman_spectrum(n, f_min, sampling_rate):
             freqs = np.fft.fftfreq(n, d=1/sampling_rate)
             freqs = np.fft.fftshift(freqs)
 
@@ -31,19 +46,15 @@ class DisturbanceGenerator:
             noise_time = np.fft.ifft(noise_freq)
             return np.real(noise_time)
 
-        high_freq_turbulence = _von_karman_spectrum(N, self.f_min, self.cutoff_freq, self.sampling_rate)
+        high_freq_turbulence = _von_karman_spectrum(N, self.f_min, self.sampling_rate)
         total_wind_speed = ar_output + high_freq_turbulence
-
-        time_index = int(t // self.dt) - 2
-
-        return total_wind_speed[time_index]
+        return 0.05*0.191*total_wind_speed*np.abs(total_wind_speed)*0.8
     
     def generate_torque_disturbance(self, t):
         if self.simulated:
-            wind_speed = self._generate_wind_disturbance(t)
-            torque_disturbance = 0.05*0.191*wind_speed*np.abs(wind_speed)*0.8
-            return torque_disturbance
+            idx = int(np.clip(np.floor(t / self.dt), 0, len(self.wind_torque) - 1))
+            return self.wind_torque[idx]
         else:
-            time = np.argmin(self.time - self.start)
-            idx = time + int(t / 0.02)
+            idx = self.start_idx + int(t / 0.02)
+            idx = int(np.clip(idx, 0, len(self.torque) - 1))
             return self.torque[idx]

@@ -1,20 +1,33 @@
+import pickle
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 import click
 from sim_tools.integrator import ModelIntegrator
 from pathlib import Path
 import json
 
-@click.command()
-@click.option(
-    "--parameters",
-    default= Path(r"C:\Users\abouh\OneDrive\Documents\McGill\Thesis\Simulation\config\sim_params\parameters_ec60.json"),
-    type=click.Path(exists=True, dir_okay=False, path_type=Path),
-    show_default=True,
-)
-def simulate(parameters):
-    with open(parameters, 'r') as f:
-        params = json.load(f)
+DEFAULT_PARAMETERS = Path(__file__).resolve().parents[2] / "config" / "sim_params" / "parameters_ec60.json"
+OUTPUT_PATH = Path(__file__).resolve().parents[2] / "results" / "simulation_results_ec60.pkl"
+
+
+def _load_cached(output_path: Path, params: dict) -> pd.DataFrame | None:
+    if not output_path.exists():
+        return None
+    with output_path.open("rb") as f:
+        cached = pickle.load(f)
+    if cached.get("parameters") != params:
+        return None
+    return cached["data"]
+
+
+def _save_results(output_path: Path, df: pd.DataFrame, params: dict) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("wb") as f:
+        pickle.dump({"parameters": params, "data": df}, f)
+
+
+def _run_simulation(params: dict) -> pd.DataFrame:
     dt = params['simulation']['time_step']
     total_time = params['simulation']['duration']
     init_state = params['simulation']['initial_state']
@@ -45,8 +58,51 @@ def simulate(parameters):
         disturbance.append(state[7])
         rw_torque.append(state[8])
         error.append(state[0]-np.arctan2(state[6], state[5]))
-        t+=dt
         state = model.rk4_step(state, t)
+        t+=dt
+
+    return pd.DataFrame({
+        "time": times,
+        "yaw": yaw,
+        "ang_vel": ang_vel,
+        "rw_i": rw_i,
+        "lt_torque": lt_torque,
+        "rw_vel": rw_vel,
+        "x": x,
+        "y": y,
+        "disturbance": disturbance,
+        "rw_torque": rw_torque,
+        "error": error,
+    })
+
+
+@click.command()
+@click.option(
+    "--parameters",
+    default=DEFAULT_PARAMETERS,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    show_default=True,
+)
+def simulate(parameters):
+    with open(parameters, 'r') as f:
+        params = json.load(f)
+
+    df = _load_cached(OUTPUT_PATH, params)
+    if df is not None:
+        click.echo(f"Reusing cached results from {OUTPUT_PATH} (parameters unchanged).")
+    else:
+        df = _run_simulation(params)
+        _save_results(OUTPUT_PATH, df, params)
+        click.echo(f"Saved results to {OUTPUT_PATH}.")
+
+    times = df["time"]
+    ang_vel = df["ang_vel"]
+    rw_vel = df["rw_vel"]
+    rw_torque = df["rw_torque"]
+    disturbance = df["disturbance"]
+    rw_i = df["rw_i"]
+    lt_torque = df["lt_torque"]
+    error = df["error"]
 
     fig = go.Figure()
 
@@ -65,26 +121,6 @@ def simulate(parameters):
     )
 
     fig.show()
-
-    results = {
-        "time": times,
-        "yaw": yaw,
-        "ang_vel": ang_vel,
-        "rw_i": rw_i,
-        "lt_torque": lt_torque,
-        "rw_vel": rw_vel,
-        "x": x,
-        "y": y,
-        "disturbance": disturbance,
-        "rw_torque": rw_torque,
-        "error": error
-    }
-    
-    output_path = Path("results/simulation_results_ec60.json")
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with output_path.open("w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2)
 
 if __name__ == "__main__":
     simulate()

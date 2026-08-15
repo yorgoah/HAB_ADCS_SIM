@@ -13,16 +13,12 @@ class Sensor:
             self.random_walk = np.cumsum(np.random.normal(0, self.K, int(self.sampling_rate*self.t + 1)))
 
         _generate_noise(self)
-        self.step = 0
+        self.last_index = -1
 
     def get_measurement(self, true_value: float, time: float):
             dt = 1/self.sampling_rate
             index = int(time // dt)
-            if self.step % self.sampling_rate == 0.0:
+            if index != self.last_index:
                 self.measurement = true_value + self.white_noise[index] + self.random_walk[index]
-                self.step += 1
-                return self.measurement
-            else:
-                self.step += 1
-                return self.measurement
-            
+                self.last_index = index
+            return self.measurement

@@ -1,10 +1,11 @@
-import json
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter, PillowWriter
 from mpl_toolkits.mplot3d.art3d import Line3D
+from pathlib import Path
 
-FILENAME = r"C:\Users\abouh\OneDrive\Documents\McGill\Thesis\Simulation\src\hab_adcs_sim\results\simulation_results_ec60.json"
+FILENAME = Path(__file__).resolve().parents[2] / "results" / "simulation_results_ec60.pkl"
 
 # ---- Defaults ----
 CUBE_SIZE = 10.0
@@ -66,13 +67,14 @@ def set_axes_equal(ax):
 
 
 def main():
-    with open(FILENAME, "r") as f:
-        data = json.load(f)
+    with open(FILENAME, "rb") as f:
+        cached = pickle.load(f)
+    data = cached["data"]
 
     t = np.asarray(data["time"], dtype=float)
     x = np.asarray(data["x"], dtype=float)
     y = np.asarray(data["y"], dtype=float)
-    z = np.asarray(data.get("z", np.zeros_like(x)), dtype=float)
+    z = np.asarray(data["z"], dtype=float) if "z" in data else np.zeros_like(x)
 
     yaw = np.asarray(data["yaw"], dtype=float)
     if YAW_IN_DEGREES:

@@ -26,7 +26,10 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "hab_adcs_sim", from = "src"}]
+packages = [
+    {include = "hab_adcs_sim", from = "src"},
+    {include = "sim_tools", from = "src"},
+]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
