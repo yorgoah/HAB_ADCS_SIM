@@ -68,9 +68,9 @@ class ModelIntegrator:
         h1 = self._dynamics(state, t)
         h2 = self._dynamics(state + 0.5 * dt * h1, t + 0.5 * dt)
         h3 = self._dynamics(state + 0.5 * dt * h2, t + 0.5 * dt)
-        h4 = self._dynamics(state + dt * h3, t + dt)
+        h4 = self._dynamics(state + dt * h3, t + dt) 
 
-        new_state = (h1 + 2*h2 + 2*h3 + h4)*dt + state
+        new_state = (h1 + 2*h2 + 2*h3 + h4)*dt / 6.0 + state
         new_state[2] = float(np.clip(new_state[2], -self.max_current, self.max_current))
         new_state[3] = float(np.clip(new_state[3], -self.max_current, self.max_current))
         return new_state
