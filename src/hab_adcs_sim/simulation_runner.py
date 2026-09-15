@@ -3,22 +3,13 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import click
-from sim_tools.integrator import ModelIntegrator
+from sim_tools.integrator import ModelIntegrator, wrap_angle
 from pathlib import Path
 import json
+import time
 
 DEFAULT_PARAMETERS = Path(__file__).resolve().parents[2] / "config" / "sim_params" / "parameters_ec60.json"
-OUTPUT_PATH = Path(__file__).resolve().parents[2] / "results" / "simulation_results_ec60.pkl"
-
-
-def _load_cached(output_path: Path, params: dict) -> pd.DataFrame | None:
-    if not output_path.exists():
-        return None
-    with output_path.open("rb") as f:
-        cached = pickle.load(f)
-    if cached.get("parameters") != params:
-        return None
-    return cached["data"]
+OUTPUT_PATH = Path(__file__).resolve().parents[2] / "results" / f"simulation_results_{time.strftime('%Y-%m-%d_%H-%M-%S')}.pkl"
 
 
 def _save_results(output_path: Path, df: pd.DataFrame, params: dict) -> None:
@@ -45,6 +36,7 @@ def _run_simulation(params: dict) -> pd.DataFrame:
     disturbance=[]
     rw_torque = []
     error = []
+    momentum = []
 
     while t <= total_time:
         times.append(t)
@@ -57,7 +49,8 @@ def _run_simulation(params: dict) -> pd.DataFrame:
         y.append(state[6])
         disturbance.append(state[7])
         rw_torque.append(state[8])
-        error.append(state[0]-np.arctan2(state[6], state[5]))
+        error.append(wrap_angle(state[0]-np.arctan2(state[6], state[5])))
+        momentum.append(model.angular_momentum(state))
         state = model.rk4_step(state, t)
         t+=dt
 
@@ -73,6 +66,7 @@ def _run_simulation(params: dict) -> pd.DataFrame:
         "disturbance": disturbance,
         "rw_torque": rw_torque,
         "error": error,
+        "momentum": momentum,
     })
 
 
@@ -87,40 +81,9 @@ def simulate(parameters):
     with open(parameters, 'r') as f:
         params = json.load(f)
 
-    df = _load_cached(OUTPUT_PATH, params)
-    if df is not None:
-        click.echo(f"Reusing cached results from {OUTPUT_PATH} (parameters unchanged).")
-    else:
-        df = _run_simulation(params)
-        _save_results(OUTPUT_PATH, df, params)
-        click.echo(f"Saved results to {OUTPUT_PATH}.")
-
-    times = df["time"]
-    ang_vel = df["ang_vel"]
-    rw_vel = df["rw_vel"]
-    rw_torque = df["rw_torque"]
-    disturbance = df["disturbance"]
-    rw_i = df["rw_i"]
-    lt_torque = df["lt_torque"]
-    error = df["error"]
-
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatter(x=times, y=error, name="yaw_error"))
-    fig.add_trace(go.Scatter(x=times, y=ang_vel, name="ang_vel"))
-    fig.add_trace(go.Scatter(x=times, y=rw_vel, name="rw_vel"))
-    fig.add_trace(go.Scatter(x=times, y=rw_torque, name="rw_torque"))
-    fig.add_trace(go.Scatter(x=times, y=disturbance, name="disturbance"))
-    fig.add_trace(go.Scatter(x=times, y=rw_i, name="rw_current"))
-    fig.add_trace(go.Scatter(x=times, y=lt_torque, name="lt_current"))
-    fig.update_layout(
-        title="Simulation signals vs time",
-        xaxis_title="Time [s]",
-        yaxis_title="Value",
-        legend_title="Signals",
-    )
-
-    fig.show()
+    df = _run_simulation(params)
+    _save_results(OUTPUT_PATH, df, params)
+    click.echo(f"Saved results to {OUTPUT_PATH}.")
 
 if __name__ == "__main__":
     simulate()

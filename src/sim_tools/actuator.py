@@ -8,9 +8,18 @@ class Motor:
         self.R = params["resistance"]
         self.L = params["inductance"]
         self.b = params["viscous_friction_coeff"]
+        self.max_current = params["max_current"]
 
-    def torque(self, voltage: float | None=0.0, current: float | None=0.0, angular_velocity: float | None=0.0) -> float:
-        di_dt = (voltage - self.R * current - self.Kb * angular_velocity) / self.L
-        torque = self.Kt * current 
-        rw_acc = (torque - self.b * angular_velocity)/self.J
-        return torque, di_dt, rw_acc
+    def torque(self, voltage: float | None=0.0, current: float | None=0.0, angular_velocity: float | None=0.0) -> tuple[float, float, float]:
+        back_emf = self.Kb * angular_velocity
+        voltage = np.clip(voltage, back_emf - self.R * self.max_current, back_emf + self.R * self.max_current)
+        di_dt = (voltage - self.R * current - back_emf) / self.L
+        torque = self.Kt * np.clip(current, -self.max_current, self.max_current) - self.b * angular_velocity
+        acc = torque / self.J
+        return torque, di_dt, acc
+
+    def voltage(self, rpm: float) -> float:
+        """Computes voltage given an rpm input.
+        
+        Converts rpm to rad/s and multiplies by back EMF constant."""
+        return self.Kb * rpm * np.pi / 30

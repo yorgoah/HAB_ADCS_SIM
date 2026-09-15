@@ -1,8 +1,8 @@
 {
     "simulation": {
-        "duration": 1000.0,
+        "duration": 600.0,
         "time_step": 0.001,
-        "initial_state": [0.785, 0.0, 0.0, 0.0, 0.0, 200.0, 200.0, 0.0, 0.0],
+        "initial_state": [0.785, 0.0, 0.0, 0.0, 157.0796, 200.0, 200.0, 0.0, 0.0],
         "ground_station": [0.0, 0.0]
     },
     "Payload_params": {
@@ -18,12 +18,13 @@
         "inductance": 0.000279, 
         "resistance": 0.288,
         "max_current": 7.29,
-        "proportional_gain":70.0,
-        "derivative_gain":6.0,
+        "proportional_gain": 8000.0,
+        "derivative_gain": 624.0,
         "integral_gain": 0.0,
-        "max_voltage": 12,
-        "viscous_friction_coeff": 0.0001,
-        "max_angular_velocity": 182.2
+        "max_rpm": 1500.0,
+        "rpm_bias": 1500.0,
+        "period_s": 0.05,
+        "viscous_friction_coeff": 0.0001
     },
     "lt_motor": {
         "activate": true,

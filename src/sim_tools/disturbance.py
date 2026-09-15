@@ -15,6 +15,9 @@ class DisturbanceGenerator:
         self.simulated = params["wind_params"]["simulated"]
         repo_root = Path(__file__).resolve().parents[2]
         self.data_path = repo_root / "config" / "ressources" / "log100_vehicle_angular_velocity_0.csv"
+        # A start is provided to pick which disturbance profile from 
+        # the flight data we want to use. Essentially allowing us to 
+        # study simulation behaviour at different altitudes.
         self.start = params["wind_params"]["start"]
         self.wind_torque = None
 
@@ -25,6 +28,7 @@ class DisturbanceGenerator:
             self.time = df["timestamp"].to_numpy() / 1e6
             self.torque = params["Payload_params"]["Ip"] * df["xyz_derivative[2]"].to_numpy()
             self.start_idx = int(np.argmin(np.abs(self.time - self.start)))
+            self.start_time = float(np.clip(self.start, self.time[0], self.time[-1]))
 
     
     def _generate_wind_disturbance(self):
@@ -55,6 +59,5 @@ class DisturbanceGenerator:
             idx = int(np.clip(np.floor(t / self.dt), 0, len(self.wind_torque) - 1))
             return self.wind_torque[idx]
         else:
-            idx = self.start_idx + int(t / 0.02)
-            idx = int(np.clip(idx, 0, len(self.torque) - 1))
-            return self.torque[idx]
+            # Interpolate against the log's own timestamps.
+            return float(np.interp(self.start_time + t, self.time, self.torque))

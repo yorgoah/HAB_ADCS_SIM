@@ -17,7 +17,7 @@ class Sensor:
 
     def get_measurement(self, true_value: float, time: float):
             dt = 1/self.sampling_rate
-            index = int(time // dt)
+            index = min(int(time // dt), len(self.white_noise) - 1)
             if index != self.last_index:
                 self.measurement = true_value + self.white_noise[index] + self.random_walk[index]
                 self.last_index = index
