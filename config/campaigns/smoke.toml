@@ -1,0 +1,26 @@
+# Tiny campaign to check the pipeline end to end
+name = "smoke"
+base_parameters = "config/sim_params/parameters_ec60.json"
+samples_per_case = 2
+include_nominal = true
+noise_seed = 0
+sampling = { method = "random", seed = 1 }
+
+[overrides]
+"simulation.duration" = 2.0
+
+[cases.dump_on]
+"lt_motor.activate" = true
+"pointing.state_machine" = false
+
+[cases.dump_off]
+"lt_motor.activate" = false
+
+[dispersions."Payload_params.Ip"]
+dist = "normal"
+sigma_rel = 0.10
+min = 0.005
+
+[dispersions."Payload_params.Cp"]
+dist = "uniform"
+rel = 0.5

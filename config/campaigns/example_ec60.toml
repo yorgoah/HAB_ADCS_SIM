@@ -1,0 +1,59 @@
+# Mass property and motor uncertainty, with and without the pivot motor
+name = "ec60_mass_props"
+base_parameters = "config/sim_params/parameters_ec60.json"
+samples_per_case = 50
+include_nominal = true
+
+# Same sensor noise and wind in every run
+noise_seed = 0
+# Uncomment for a different wind in each run (run N of every case shares it)
+# vary_wind = true
+sampling = { method = "lhs", seed = 20260915 }
+
+[overrides]
+"simulation.duration" = 600.0
+
+[cases.dump_on]
+"lt_motor.activate" = true
+"pointing.state_machine" = false
+
+[cases.dump_off]
+"lt_motor.activate" = false
+
+# Uncomment to also sweep the wheel gain
+# [grid]
+# "rw_motor.proportional_gain" = [6000.0, 8000.0, 10000.0]
+
+[dispersions."Payload_params.Ip"]
+dist = "normal"
+sigma_rel = 0.10
+min = 0.005
+
+[dispersions."Payload_params.Cp"]
+dist = "uniform"
+rel = 0.5
+
+[dispersions."rw_motor.rotor_inertia"]
+dist = "normal"
+sigma_rel = 0.05
+min = 1e-6
+
+# Kt = Kb in SI units
+[dispersions."rw_motor.torque_constant"]
+dist = "normal"
+sigma_rel = 0.05
+link = ["rw_motor.back_emf_constant"]
+
+[dispersions."rw_motor.viscous_friction_coeff"]
+dist = "uniform"
+rel = 0.5
+
+[dispersions."rw_motor.resistance"]
+dist = "normal"
+sigma_rel = 0.05
+min = 0.01
+
+[dispersions."lt_motor.torque_constant"]
+dist = "normal"
+sigma_rel = 0.05
+link = ["lt_motor.back_emf_constant"]
