@@ -1,7 +1,7 @@
 [project]
 name = "hab-adcs-sim"
 version = "0.1.0"
-description = ""
+description = "Yaw attitude and pointing simulation of a high-altitude balloon payload with a reaction wheel"
 authors = [
     {name = "Yorgo",email = "abouhaidar.yorgo@gmail.com"}
 ]
@@ -9,20 +9,10 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "numpy (>=2.4.0,<3.0.0)",
-    "pychrono (>=1.1.0,<2.0.0)",
-    "chrono (>=1.0.2,<2.0.0)",
-    "pydy (>=0.8.0,<0.9.0)",
-    "sympy (>=1.14.0,<2.0.0)",
-    "matplotlib (>=3.10.8,<4.0.0)",
-    "click (>=8.3.1,<9.0.0)",
-    "plotly (>=6.5.1,<7.0.0)",
     "scipy (>=1.16.3,<2.0.0)",
     "pandas (>=2.3.3,<3.0.0)",
-    "rosbags (>=0.11.0,<0.12.0)",
-    "control (>=0.10.2,<0.11.0)",
-    "seaborn (>=0.13.2,<0.14.0)",
-    "pyulog (>=1.2.2,<2.0.0)",
-    "plotly-express (>=0.4.1,<0.5.0)"
+    "matplotlib (>=3.10.8,<4.0.0)",
+    "click (>=8.3.1,<9.0.0)"
 ]
 
 [tool.poetry]
