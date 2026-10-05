@@ -8,15 +8,17 @@ class Motor:
         self.R = params["resistance"]
         self.L = params["inductance"]
         self.b = params["viscous_friction_coeff"]
+        # Bearing drag (N-m), only set for the pivot motor
+        self.coulomb = params.get("coulomb_friction", 0.0)
         self.max_current = params["max_current"]
 
-    def torque(self, voltage: float | None=0.0, current: float | None=0.0, angular_velocity: float | None=0.0) -> tuple[float, float, float]:
+    def torque(self, voltage: float | None=0.0, current: float | None=0.0, angular_velocity: float | None=0.0) -> tuple[float, float]:
         back_emf = self.Kb * angular_velocity
         voltage = np.clip(voltage, back_emf - self.R * self.max_current, back_emf + self.R * self.max_current)
         di_dt = (voltage - self.R * current - back_emf) / self.L
-        torque = self.Kt * np.clip(current, -self.max_current, self.max_current) - self.b * angular_velocity
-        acc = torque / self.J
-        return torque, di_dt, acc
+        friction = self.b * angular_velocity + self.coulomb * np.sign(angular_velocity)
+        torque = self.Kt * np.clip(current, -self.max_current, self.max_current) - friction
+        return torque, di_dt
 
     def voltage(self, rpm: float) -> float:
         """Computes voltage given an rpm input.
