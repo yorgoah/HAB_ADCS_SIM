@@ -35,7 +35,7 @@ _P20 = _P11 * np.exp(-_G0 * 9000.0 / (_R_AIR * _T11))
 
 
 def log_path(name: str) -> Path:
-    return RESOURCES / f"{name}_vehicle_angular_velocity_0.csv"
+    return RESOURCES / f"{name}_yaw_acceleration.csv.gz"
 
 
 @lru_cache(maxsize=4)
