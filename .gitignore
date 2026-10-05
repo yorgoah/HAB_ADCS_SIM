@@ -1,4 +1,18 @@
 __pycache__/
 *.pyc
-results/
 .pytest_cache/
+
+# Simulation output
+/results/
+/monte_carlo/
+src/sim_outupts/
+
+# Flight logs, the sim only needs the trimmed log137 file
+config/ressources/*
+!config/ressources/log137_yaw_acceleration.csv.gz
+
+# Local analysis scripts
+src/analysis/
+tests/test_mc_postprocess.py
+tests/test_may27_comparison.py
+tests/test_wind_validation.py
