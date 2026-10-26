@@ -69,7 +69,7 @@ This simulation models the payload's azimuth dynamics, motors, sensors and fligh
 <summary><b>Equations of motion</b></summary>
 <br>
 
-Payload azimuth $`\alpha`$ and wheel speed $`\omega`$:
+Payload azimuth and momentum wheel speed:
 
 ```math
 I_p\,\ddot\alpha = \tau_w - \tau_{rw} - \tau_{pm} - c_p\,\dot\alpha,
@@ -77,12 +77,14 @@ I_p\,\ddot\alpha = \tau_w - \tau_{rw} - \tau_{pm} - c_p\,\dot\alpha,
 J_{rw}\,\dot\omega = \tau_{rw}
 ```
 
-Momentum wheel, driven at $`V = K_b\,\omega_{cmd}`$:
+Momentum wheel, driven at the back-EMF voltage of the commanded speed:
 
 ```math
 L\,\frac{di}{dt} = V - R\,i - K_b\,\omega,
 \qquad
-\tau_{rw} = K_t\,\mathrm{sat}(i) - b\,\omega
+\tau_{rw} = K_t\,\mathrm{sat}(i) - b\,\omega,
+\qquad
+V = K_b\,\omega_{cmd}
 ```
 
 Pivot motor, current commanded:
@@ -91,13 +93,15 @@ Pivot motor, current commanded:
 \tau_{pm} = K_t\,\mathrm{sat}(i_{cmd}) + b\,\dot\alpha + \tau_c\,\mathrm{sgn}(\dot\alpha)
 ```
 
-Wind torque at altitude $`h`$:
+Wind torque along the ascent:
 
 ```math
-\tau_w(t) = c_s\,\rho(h) + \sigma_0\left(\frac{\rho(h)}{\rho_0}\right)^{k} e^{s\eta}\,\xi(t)
+\tau_w(t) = c_s\,\rho(h) + \sigma_0\left(\frac{\rho(h)}{\rho_0}\right)^{k} e^{s\eta}\,\xi(t),
+\qquad
+h = h_0 + \dot h\,t
 ```
 
-$`\xi`$ is a unit-variance IAAFT surrogate of the torque logged on the passive May 8, 2026 flight and $`\eta \sim \mathcal{N}(0, 1)`$ is drawn once per run. The steady torque $`c_s`$ and gust level $`\sigma_0`$ are fitted to the May 27, 2026 flight.
+The first term is the steady wind torque, proportional to air density. The second is the gust torque: a unit-variance IAAFT surrogate of the torque logged on the passive May 8, 2026 flight, scaled with air density and by a random factor drawn once per run. The steady torque and gust level are fitted to the May 27, 2026 flight.
 
 </details>
 
