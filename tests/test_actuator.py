@@ -1,6 +1,7 @@
+import numpy as np
 import pytest
 
-from sim_tools.actuator import Motor
+from sim_tools.actuator import Motor, VescSpeedControl
 
 PARAMS = {
     "rotor_inertia": 1e-4,
@@ -77,3 +78,51 @@ def test_back_emf_opposes_current_growth():
     _, di_dt = motor.torque(voltage=voltage, current=1.0, angular_velocity=ang_vel)
     expected = (-PARAMS["resistance"] * 1.0) / PARAMS["inductance"]
     assert di_dt == pytest.approx(expected)
+
+VESC = {"kp": 0.004, "ki": 0.004, "pole_pairs": 7}
+
+
+def make_vesc(dt=1e-3, **overrides):
+    motor = make_motor()
+    return VescSpeedControl({**VESC, **overrides}, motor, dt), motor
+
+
+def test_vesc_at_the_commanded_speed_only_cancels_the_back_emf():
+    vesc, motor = make_vesc()
+    speed = 100.0
+    assert vesc.voltage(speed * 30 / np.pi, speed) == pytest.approx(motor.Kb * speed)
+
+
+def test_vesc_proportional_current_is_a_fraction_of_the_current_limit():
+    vesc, motor = make_vesc(ki=0.0)
+    speed, rpm = 100.0, 100.0 * 30 / np.pi + 10.0  # 10 rpm low, 70 ERPM
+    current = (vesc.voltage(rpm, speed) - motor.Kb * speed) / motor.R
+    assert current == pytest.approx(VESC["kp"] * 10.0 * VESC["pole_pairs"] * PARAMS["max_current"])
+
+
+def test_vesc_current_request_is_capped_at_the_current_limit():
+    vesc, motor = make_vesc()
+    for rpm in (1e5, -1e5):
+        current = (vesc.voltage(rpm, 0.0) - 0.0) / motor.R
+        assert current == pytest.approx(np.sign(rpm) * PARAMS["max_current"])
+
+
+def test_vesc_integral_is_clamped_like_the_firmware():
+    vesc, _ = make_vesc()
+    for _ in range(10_000):
+        vesc.voltage(1e5, 0.0)
+    assert vesc.i_term == pytest.approx(1.0)
+
+
+def test_vesc_holds_the_commanded_speed_against_a_load():
+    # Wheel held by a constant load torque: the integral removes the steady error
+    dt = 1e-4
+    vesc, motor = make_vesc(dt=dt)
+    rpm, load = 2000.0, 0.02
+    speed, current = rpm * np.pi / 30, 0.0
+    for _ in range(round(5.0 / dt)):
+        voltage = vesc.voltage(rpm, speed)
+        torque, di_dt = motor.torque(voltage, current, speed)
+        current += di_dt * dt
+        speed += (torque - load) / motor.J * dt
+    assert speed * 30 / np.pi == pytest.approx(rpm, abs=1.0)

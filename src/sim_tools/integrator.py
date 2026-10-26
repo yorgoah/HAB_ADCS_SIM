@@ -1,6 +1,6 @@
 import numpy as np
 from sim_tools.controller import Controller
-from sim_tools.actuator import Motor
+from sim_tools.actuator import Motor, VescSpeedControl
 from sim_tools.disturbance import DisturbanceGenerator
 from sim_tools.pointing import PointingStateMachine, RAD_S_TO_RPM
 from sim_tools.sensor import Sensor
@@ -44,6 +44,9 @@ class ModelIntegrator:
         self.pointing = PointingStateMachine(constants, dt)
         self.rpm_bias = constants['rw_motor']['rpm_bias']
         self.rw_motor = Motor(constants["rw_motor"])
+        # Without a speed loop the wheel is driven at the back-EMF voltage of the command
+        speed_control = constants["rw_motor"].get("speed_control")
+        self.rw_speed_control = None if speed_control is None else VescSpeedControl(speed_control, self.rw_motor, dt)
         self.momentum_management = constants['lt_motor']['activate']
         self.lt_max_current = constants['lt_motor']['max_current']
         self.lt_controller = Controller(
@@ -80,7 +83,11 @@ class ModelIntegrator:
         rpm_command = self.pointing.rpm(
             self.yaw_error, yaw_rate_measured, rw_velocity_measurement * RAD_S_TO_RPM
         )
-        self.rw_voltage = self.rw_motor.voltage(rpm_command)
+        if self.rw_speed_control is None:
+            self.rw_voltage = self.rw_motor.voltage(rpm_command)
+        else:
+            # The VESC regulates on its own speed estimate, not the flight computer's tachometer
+            self.rw_voltage = self.rw_speed_control.voltage(rpm_command, rw_vel)
 
         if self.momentum_management:
             self.lt_current = float(self.lt_controller.output(rw_velocity_measurement - (self.rpm_bias * np.pi / 30)))

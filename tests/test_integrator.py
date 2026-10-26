@@ -85,3 +85,28 @@ def test_yaw_error_shrinks_from_a_large_initial_offset(short_params):
     x, y = states[:, 5], states[:, 6]
     error = yaw - np.arctan2(y, x)
     assert np.abs(error[-1]) < 0.5 * np.abs(error[0])
+
+
+@pytest.mark.parametrize("speed_control", [True, False], ids=["vesc", "open_loop"])
+def test_wheel_reaches_the_commanded_speed_only_with_the_vesc_loop(short_params, speed_control):
+    params = copy.deepcopy(short_params)
+    params["Payload_params"]["Ip"] = 1e6  # payload held still
+    if not speed_control:
+        del params["rw_motor"]["speed_control"]
+    dt = params["simulation"]["time_step"]
+    model = ModelIntegrator(dt, params["simulation"]["initial_state"], params)
+    model.disturbance.generate_torque_disturbance = lambda t: 0.0
+    model.pointing.rpm = lambda error, rate, rw_rpm: 2000
+
+    state = np.array(params["simulation"]["initial_state"], dtype=float)
+    t = 0.0
+    for _ in range(round(1.0 / dt)):
+        state = model.rk4_step(state, t)
+        t += dt
+
+    rpm = state[4] * 30 / np.pi
+    if speed_control:
+        assert rpm == pytest.approx(2000.0, abs=5.0)
+    else:
+        # Back-EMF drive sags under the bearing drag
+        assert rpm < 1970.0

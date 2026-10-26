@@ -60,7 +60,7 @@ This simulation models the payload's azimuth dynamics, motors, sensors and fligh
 
 - **Dynamics:** rigid-body yaw with viscous damping, integrated with RK4 at 1 ms ([`integrator.py`](src/sim_tools/integrator.py))
 - **Wind:** IAAFT surrogates of the yaw torque measured on a passive flight, scaled with air density along the ascent ([`wind_surrogate.py`](src/sim_tools/wind_surrogate.py))
-- **Motors:** momentum wheel and pivot motor modelled as DC motors with back-EMF, current limits and friction ([`actuator.py`](src/sim_tools/actuator.py))
+- **Motors:** momentum wheel and pivot motor modelled as DC motors with back-EMF, current limits and friction, the wheel speed held by the VESC's speed loop ([`actuator.py`](src/sim_tools/actuator.py))
 - **Sensors:** gyro, heading, tachometer and GNSS sampled at their flight rates with noise and bias drift ([`sensor.py`](src/sim_tools/sensor.py))
 - **Flight software:** the pointing state machine ported from the flight computer, including wheel saturation and recovery ([`pointing.py`](src/sim_tools/pointing.py))
 - **Monte Carlo:** dispersions on mass properties, friction, motor constants and altitude, defined in TOML and run in parallel ([`monte_carlo/`](src/hab_adcs_sim/monte_carlo))
@@ -77,14 +77,16 @@ I_p\,\ddot\alpha = \tau_w - \tau_{rw} - \tau_{pm} - c_p\,\dot\alpha,
 J_{rw}\,\dot\omega = \tau_{rw}
 ```
 
-Momentum wheel, driven at the back-EMF voltage of the commanded speed:
+Momentum wheel, speed controlled by the VESC in RPM mode (PI on the ERPM error $e$, gains in VESC Tool units, integral clamped to $\pm 1$, ideal current loop):
 
 ```math
 L\,\frac{di}{dt} = V - R\,i - K_b\,\omega,
 \qquad
 \tau_{rw} = K_t\,\mathrm{sat}(i) - b\,\omega,
 \qquad
-V = K_b\,\omega_{cmd}
+V = R\,i_{cmd} + K_b\,\omega,
+\qquad
+i_{cmd} = i_{max}\,\mathrm{sat}_1\!\left(k_p\,e + k_i \textstyle\int e\,dt\right)
 ```
 
 Pivot motor, current commanded:

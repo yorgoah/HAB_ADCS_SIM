@@ -25,6 +25,11 @@
         "rpm_bias": 1500.0,
         "period_s": 0.05,
         "viscous_friction_coeff": 0.00021,
+        "speed_control": {
+            "kp": 0.004,
+            "ki": 0.004,
+            "pole_pairs": 7
+        },
         "stabilize": {
             "proportional_gain": 624.0,
             "derivative_gain": 0.0,

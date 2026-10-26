@@ -25,3 +25,26 @@ class Motor:
         
         Converts rpm to rad/s and multiplies by back EMF constant."""
         return self.Kb * rpm * np.pi / 30
+
+class VescSpeedControl:
+    """RPM mode of the VESC: a PI speed loop sets the current, the FOC current loop tracks it.
+
+    Gains are in VESC Tool units (per ERPM). The output is a fraction of the
+    current limit and the integral is clamped to +/-1, as in the firmware. The
+    current loop is taken as ideal: R * i_cmd plus back-EMF feedforward.
+    """
+
+    def __init__(self, params: dict, motor: Motor, dt: float):
+        self.kp = params["kp"]
+        self.ki = params["ki"]
+        self.erpm_per_rad_s = params["pole_pairs"] * 30 / np.pi
+        self.motor = motor
+        self.dt = dt
+        self.i_term = 0.0
+
+    def voltage(self, rpm: float, angular_velocity: float) -> float:
+        error = (rpm * np.pi / 30 - angular_velocity) * self.erpm_per_rad_s
+        self.i_term = np.clip(self.i_term + error * self.ki * self.dt, -1.0, 1.0)
+        output = np.clip(error * self.kp + self.i_term, -1.0, 1.0)
+        current = output * self.motor.max_current
+        return self.motor.R * current + self.motor.Kb * angular_velocity
