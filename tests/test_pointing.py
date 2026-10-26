@@ -4,17 +4,23 @@ Transition counts allow one cycle of slack for rounding of the task time.
 """
 
 import copy
+import json
 
+import numpy as np
 import pytest
 
+from hab_adcs_sim.monte_carlo.per_run_analysis import ERROR_BOUND_DEG
 from hab_adcs_sim.simulation_runner import run_simulation
+from sim_tools.disturbance import DisturbanceGenerator
 from sim_tools.pointing import (
     DESATURATE_MIN_S,
     DESATURATION_RATE_RPM,
     STABILIZE_TIMEOUT_S,
     PointingState,
     PointingStateMachine,
+    RAD_S_TO_RPM,
 )
+from tests.conftest import PARAMS_PATH
 
 MID_RPM = 1500.0  # wheel speed well away from both saturation edges
 
@@ -194,4 +200,60 @@ def test_disabled_state_machine_stays_in_pointing(base_params):
 
 def test_run_logs_the_pointing_state(short_params):
     df = run_simulation(short_params, seed=0)
+    assert (df["pointing_state"] == PointingState.POINTING.value).all()
+
+
+def spin_up_run(base_params, state_machine=True, duration=25.0):
+    """Closed loop run from a 6 rad/s spin in calm air, enough to saturate the wheel."""
+    params = copy.deepcopy(base_params)
+    params["simulation"]["duration"] = duration
+    params["simulation"]["initial_state"][1] = 6.0
+    params["pointing"]["state_machine"] = state_machine
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(DisturbanceGenerator, "generate_torque_disturbance", lambda self, t: 0.0)
+        return run_simulation(params, seed=0)
+
+
+def state_sequence(df):
+    """Logged states with repeats collapsed, and the time each one was entered."""
+    states = df["pointing_state"].to_numpy().astype(int)
+    starts = np.r_[0, np.flatnonzero(np.diff(states)) + 1]
+    return [PointingState(s) for s in states[starts]], df["time"].to_numpy()[starts]
+
+
+@pytest.fixture(scope="module")
+def spin_up():
+    with open(PARAMS_PATH) as f:
+        return spin_up_run(json.load(f))
+
+
+def test_closed_loop_spin_recovers_through_saturation(spin_up):
+    states, entered = state_sequence(spin_up)
+    assert states == [
+        PointingState.POINTING,
+        PointingState.SATURATED,
+        PointingState.STABILIZE,
+        PointingState.POINTING,
+    ]
+    # The wheel stays at its limit for saturation_s before the flag is acted on,
+    # and the ramp back to the bias takes at least DESATURATE_MIN_S.
+    assert entered[2] - entered[1] >= DESATURATE_MIN_S - 1e-6  # logged times accumulate rounding
+
+
+def test_closed_loop_spin_points_again_after_recovery(spin_up, base_params):
+    # Checked once the slew back to the target is over. Without momentum
+    # management the pivot friction drains the wheel later on, so the end of
+    # the run is not checked.
+    _, entered = state_sequence(spin_up)
+    t = spin_up["time"]
+    window = spin_up[(t >= entered[-1] + 2.0) & (t <= entered[-1] + 4.0)]
+    rpm = window["rw_vel"] * RAD_S_TO_RPM
+    sat = base_params["pointing"]["saturation_rpm"]
+
+    assert np.degrees(window["error"].abs().max()) < ERROR_BOUND_DEG
+    assert rpm.between(100.0, sat - 100.0).all()
+
+
+def test_closed_loop_disabled_state_machine_never_leaves_pointing(base_params):
+    df = spin_up_run(base_params, state_machine=False, duration=15.0)
     assert (df["pointing_state"] == PointingState.POINTING.value).all()
