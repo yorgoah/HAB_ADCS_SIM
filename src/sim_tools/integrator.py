@@ -1,8 +1,8 @@
 import numpy as np
-from sim_tools.controller import Controller
 from sim_tools.actuator import Motor
 from sim_tools.disturbance import DisturbanceGenerator
 from sim_tools.pointing import PointingStateMachine, RAD_S_TO_RPM
+from sim_tools.pwmodulator import Modulator
 from sim_tools.sensor import Sensor
 
 
@@ -42,15 +42,9 @@ class ModelIntegrator:
         self.disturbance = DisturbanceGenerator(constants, rng=dist_rng)
 
         self.pointing = PointingStateMachine(constants, dt)
-        self.rpm_bias = constants['rw_motor']['rpm_bias']
+        self.pwm = Modulator(constants)
         self.rw_motor = Motor(constants["rw_motor"])
         self.momentum_management = constants['lt_motor']['activate']
-        self.lt_max_current = constants['lt_motor']['max_current']
-        self.lt_controller = Controller(
-            params=constants['lt_motor'],
-            dt=dt,
-            output_limit=self.lt_max_current,
-        )
         self.lt_motor = Motor(constants["lt_motor"])
         self.imu = Sensor(constants["inertial_measurement_unit"], duration=self.duration, initial_value=init_state[0], rng=imu_rng)
         self.gps = Sensor(constants["gps"], duration=self.duration, initial_value=init_state[5], rng=gps_rng)
@@ -83,7 +77,7 @@ class ModelIntegrator:
         self.rw_voltage = self.rw_motor.voltage(rpm_command)
 
         if self.momentum_management:
-            self.lt_current = float(self.lt_controller.output(rw_velocity_measurement - (self.rpm_bias * np.pi / 30)))
+            self.lt_current = self.pwm.modulate(rw_velocity_measurement * RAD_S_TO_RPM, state[2], t)
         else:
             self.lt_current = 0.0
 

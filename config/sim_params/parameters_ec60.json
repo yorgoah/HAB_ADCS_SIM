@@ -40,7 +40,7 @@
         "saturation_s": 5.0
     },
     "lt_motor": {
-        "activate": false,
+        "activate": true,
         "rotor_inertia": 0.0, 
         "load_inertia": 0.015, 
         "torque_constant": 0.128, 
@@ -51,8 +51,12 @@
         "proportional_gain": 0.006,
         "derivative_gain":0,
         "integral_gain": 0,
-        "period_s": 1.0,
-        "pulse_s": 0.2,
+        "pulse_current": 3.0,
+        "settle_time": 0.2,
+        "integration_threshold": 0.1,
+        "deadband": 0.21,
+        "loop_gain": 1.0,
+        "lookahead_s": 0.5,
         "max_voltage": 12,
         "viscous_friction_coeff": 0.0031,
         "coulomb_friction": 0.01
@@ -82,7 +86,7 @@
     },
     "tachometer": {
         "sampling_rate": 50,
-        "noise_density": 0.0,
+        "noise_density": 0.2094,
         "random_walk": 0.0
     },
     "gyroscope": {

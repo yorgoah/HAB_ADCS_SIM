@@ -93,6 +93,7 @@ class PointingStateMachine:
                 return
         self._set_rpm(self.controllers["pointing"].output(error, yaw_rate) + self.rpm_bias)
 
+
     def _stabilize(self, now, yaw_rate, rw_rpm):
         self._set_mode("stabilize")
         if self._is_saturated(now, rw_rpm):

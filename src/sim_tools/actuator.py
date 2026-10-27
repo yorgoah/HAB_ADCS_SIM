@@ -14,10 +14,10 @@ class Motor:
 
     def torque(self, voltage: float | None=0.0, current: float | None=0.0, angular_velocity: float | None=0.0) -> tuple[float, float]:
         back_emf = self.Kb * angular_velocity
-        voltage = np.clip(voltage, back_emf - self.R * self.max_current, back_emf + self.R * self.max_current)
+        voltage = min(max(voltage, back_emf - self.R * self.max_current), back_emf + self.R * self.max_current)
         di_dt = (voltage - self.R * current - back_emf) / self.L
         friction = self.b * angular_velocity + self.coulomb * np.sign(angular_velocity)
-        torque = self.Kt * np.clip(current, -self.max_current, self.max_current) - friction
+        torque = self.Kt * min(max(current, -self.max_current), self.max_current) - friction
         return torque, di_dt
 
     def voltage(self, rpm: float) -> float:
